@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: botnest
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./bots_data:/app/bots_data          # bot source code & files
+      - ./botnest.db:/app/botnest.db        # SQLite database
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-change-me-please}
+      - BOTS_DIR=/app/bots_data
+      - DB_PATH=/app/botnest.db
+    # Bots need Python & Node.js — see Dockerfile
+
+  nginx:
+    image: nginx:alpine
+    container_name: botnest-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro              # put your SSL certs here
+    depends_on:
+      - app
